@@ -10,21 +10,10 @@ format:
       light: [flatly, .resources/theme.scss]
     number-sections: false
     fig-align: center
-css: style.css
+    include-in-header:
+      - text: |
+          <link rel = "shortcut icon" href = ".resources/aims_logo.png" />
 ---
-<!-- 
-::::{.overflow-hide}
-:::{.title-block-img}
-![](.resources/fish_book.gif){.title-img}
-
-:::
-
-:::{.title-block-text}
-# AIMS Stats Library
-:::
-
-:::: -->
-
 ```{r knitrOpts, echo=FALSE}
 knitr::opts_chunk$set(message=FALSE, warning=FALSE, echo=FALSE)
 ```
@@ -274,11 +263,17 @@ bib %>%
     )
   ) %>%
   add_title(
-    title = reactablefmtr::html(paste(
-      # "<img src='.resources/fish_book.gif' width='90' height='85' style='margin-left: 0px; margin-right: 80px;'>",
-      "<img src='.resources/aims_logo.png' width='70' height='70' style='margin-left: 40px; margin-right: 10px; margin-top: -2px;'>", 
-      "<code>Stats Team Library</code>"      
-    )), 
+    title = reactablefmtr::html(
+      "<img src='.resources/fish_book.gif' width='150' height='140' style='margin-left: 30px; margin-right: 50px; margin-top: -20px;'>"  
+    ),
+    align = "center",
     margin = margin(0, 0, 0, 0)
+  ) %>%
+  add_title(
+    title = reactablefmtr::html(paste(
+      # "<img src='.resources/aims_logo.png' width='70' height='70' style='margin-left: 40px; margin-right: 10px; margin-top: -2px;'>", 
+      "<code>Stats Team Library</code>"
+    )), 
+    align = "center"
   )
 ```
