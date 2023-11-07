@@ -1,0 +1,283 @@
+---
+engine: knitr
+format:
+  html:
+    toc: false
+    highlight-style: atom-one
+    embed-resources: true
+    smooth-scroll: true
+    theme:
+      light: [flatly, .resources/theme.scss]
+    number-sections: false
+    fig-align: center
+css: style.css
+---
+<!-- 
+::::{.overflow-hide}
+:::{.title-block-img}
+![](.resources/fish_book.gif){.title-img}
+
+:::
+
+:::{.title-block-text}
+# AIMS Stats Library
+:::
+
+:::: -->
+
+```{r knitrOpts, echo=FALSE}
+knitr::opts_chunk$set(message=FALSE, warning=FALSE, echo=FALSE)
+```
+
+
+```{r setup}
+# We would like to display our resources (papers, books, etc) in a table.
+# The main column will have the resource title (which is hyperlinked to 
+# the pdf file), the authors last names, and the synopsis in a dropdown. 
+# We want everything displayed in this column to be searchable. To do this
+# we need to paste everything to be displayed together as the value for 
+# each cell in the main column, we will then style the column later to 
+# so the components as we want. 
+
+library(tidyverse)
+library(bib2df)
+library(reactablefmtr)
+library(htmltools)
+library(shiny)
+
+# Font awesome icons to symbolise resource categories
+# Add more are needed...
+category_icons <- list(
+  article = "file-contract",
+  book = "book"
+)
+
+# Read in bibtex file to df with author's names seperated (first, last, etc)
+bib_raw <- bib2df::bib2df("stats-lib.bib", separate_names = TRUE)
+
+# Format bib df
+bib <- bib_raw |> 
+  rename_with(str_to_lower) |>
+  # Some columns do not format properly (e.g. reading '}' from bibtex)
+  # Fix up these columns as neccessary
+  mutate(
+    # Remove all non-letters from uploader
+    uploader = str_remove_all(uploader, "[^A-z ]")
+  ) |> 
+  rowwise() |> 
+  # Get authors' lastnames (contained in a df in each cell)
+  mutate(author_lastnames = paste(author$last_name, collapse = ", ")) |> 
+  ungroup() |> 
+  # We want everything displayed in the final table to be searchable
+  # So we paste the title, authors' last names, and synopsis together
+  # We will only want to use the title from this cell value, but we need
+  # everything together to be searchable
+  mutate(
+    # The full main column cell values (all text to be searchable)
+    resource = paste(title, author_lastnames, synopsis),
+    # The text to be removed to regain just the title
+    resource_remove = paste(author_lastnames, synopsis), 
+    aims_url = aims_url |> str_remove( "\\}$|\\},$")
+  ) |>
+  select(
+    resource,
+    year, 
+    uploader,
+    title,
+    author,
+    author_lastnames,
+    synopsis,
+    category,
+    url,
+    aims_url,
+    resource_remove
+  )
+
+# A function to create fancy resource uploader/recommender icons
+uploader_icon <- function(uploader){
+  uploader <- tolower(uploader)
+  uploader_lookup <- list(
+    murray = list(
+      icon = "m",
+      color = "green"
+    ), 
+    diego = list(
+      icon = "d",
+      color = "blue"
+    ),
+    julie = list(
+      icon = "j",
+      color = "orange"
+    ),
+    beccy = list(
+      icon = "r",
+      color = "yellow"
+    ),
+    rebecca = list(
+      icon = "r",
+      color = "yellow"
+    ), 
+    brendan = c(
+      icon = "b", 
+      color = "purple"
+    )
+  )
+  icon <- uploader_lookup[[uploader]]$icon
+  color <- uploader_lookup[[uploader]]$color
+  # div(icon)
+  icon <- shiny::icon(icon, class = "fa-stack-1x")
+  bg_circle <- htmltools::tagAppendAttributes(
+    shiny::icon("circle", class = "fa-stack-2x"),
+    style = paste0("color: ", color, ";")
+  )
+  span(icon, bg_circle, class = "fa-stack")
+}
+
+category_icon <- function(category, size = "2x") {
+  category <- category |> 
+    tolower() |> 
+    str_remove_all("[^A-z ]")
+  if (!(category %in% names(category_icons))) {
+    warning(paste0("Unknown or missing category: '", category, "'"))
+    shiny::icon("file-circle-question")
+  } else {
+    shiny::icon(category_icons[[category]], class = paste0("fa-", size))
+  }
+}
+```
+
+```{r table}
+#| classes: column-page
+
+# Create the table with reactable
+bib %>%
+  reactable(
+    ,
+    # ____ Style table ____
+    highlight = TRUE,
+    wrap = TRUE,
+    defaultPageSize = 10,
+    style = list(
+      fontFamily = "Recursive, sans-serif", 
+      fontSize = "1rem"
+    ),
+    defaultColDef = colDef(
+      vAlign = "center",
+      align = "center",
+      headerVAlign = "center",
+      sortable = FALSE
+    ),
+
+    # ____ Synopsis in dropdown ____
+    details = function(index){
+      synopsis <- bib[index, "synopsis"]
+      synopsis <- ifelse(
+        synopsis %in% c("nil", "", "NA"),
+        NA_character_, 
+        synopsis
+      )
+      # Style for synopsis text
+      synopsis_div <- div(
+        style = list(
+          float = "left",
+          fontSize = "0.7rem", 
+          margin = "5px 60px 5px 60px"
+        ), 
+        synopsis
+      )
+      tagList(synopsis_div)
+    },
+    defaultExpanded = FALSE,
+
+    # ____ Format columns ____
+    columns = list(
+      # The main column
+      resource = colDef(
+        name = "",
+        align = "left",
+        html = TRUE,
+        cell = function(value, index) {
+          url <- as.character(bib[index, "url"])
+          title <- bib[index, "title"]
+          # For some reason bib[index, "author_lastnames"] doesn't behave 
+          # as expected. So recreate the last names string here.
+          author_last_names <- bib[index, "author"]$author[[1]]$last_name |> 
+            paste(collapse = ", ")
+          # We previously created the resource field by pasting the title, 
+          # author lastnames, and synopsis together. This is so everything
+          # can be searched for. Now we remove the author lastnames and
+          # synopsis to regain just the title (seemingly we need to use 
+          # `value` here or else nothing will be displayed, hence this 
+          # somewhat convuluted work around).
+          resource_remove <- bib[index, "resource_remove"] |>
+            as.character() 
+          resource_show <- value |> str_remove(resource_remove)
+          title_linked <- tags$strong(tags$a(
+            href = url, 
+            target = "_blank",
+            resource_show
+          ))
+          # Show the author lastnames under the title with specific styling
+          authors_div <- div(
+            style = list(
+              float = "left", 
+              fontSize = "0.7rem"
+            ),
+            author_last_names
+          )
+          tagList(
+            title_linked, tags$br(), 
+            authors_div, tags$br()
+          )
+        },
+        minWidth = 400,
+        sortable = FALSE, 
+        searchable = TRUE,
+        filterable = TRUE
+      ),
+      # Show year resource was published (in own column so can be sorted)
+      year = colDef(
+        name = " ", 
+        sortable = TRUE, 
+        width = 100
+      ),
+      # Show resource uploader/recommender as icon
+      uploader = colDef(
+        name = "", 
+        cell = function(value){uploader_icon(value)}, 
+        width = 70
+      ),
+      aims_url = colDef(
+        name = "",
+        cell = function(value, index){
+          icon <- bib[index, "category"] |> 
+            as.character() |> 
+            category_icon()
+          category <- as.character(bib[index, "category"])
+          link <- tags$a(
+            href = as.character(value), 
+            target = "_blank", 
+            icon
+          )
+        }, 
+        width = 70
+      ),
+      # Dont show any other columns
+      title = colDef(show = FALSE),
+      author = colDef(show = FALSE),
+      synopsis = colDef(show = FALSE),
+      author_lastnames = colDef(show = FALSE), 
+      resource_remove = colDef(show = FALSE), 
+      category = colDef(show = FALSE), 
+      url = colDef(show = FALSE)
+    )
+  ) %>%
+  add_title(
+    title = reactablefmtr::html(paste(
+      # "<img src='.resources/fish_book.gif' width='90' height='85' style='margin-left: 0px; margin-right: 80px;'>",
+      "<img src='.resources/aims_logo.png' width='70' height='70' style='margin-left: 40px; margin-right: 10px; margin-top: -2px;'>", 
+      "<code>Stats Team Library</code>"      
+    )), 
+    margin = margin(0, 0, 0, 0)
+  )
+```
