@@ -12,7 +12,7 @@ format:
     fig-align: center
     include-in-header:
       - text: |
-          <link rel = "shortcut icon" href = ".resources/aims_logo.png" />
+          <link rel="AIMS logo" href=".resources/aims_logo.png" />
 ---
 ```{r knitrOpts, echo=FALSE}
 knitr::opts_chunk$set(message=FALSE, warning=FALSE, echo=FALSE)
