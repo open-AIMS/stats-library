@@ -1,7 +1,11 @@
-# stats-library
+<img src=".resources/fish_book.gif" style="width: 300px">
+
+# stats-library 
+
 A collection of resources curated by the AIMS stats team.
 
 [**View the library here!**](https://open-aims.github.io/stats-library/)
+
 
 
 ## Adding resources
