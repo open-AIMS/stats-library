@@ -1,6 +1,6 @@
-<img src=".resources/fish_book.gif" style="width: 300px">
-
 # stats-library 
+
+<img src=".resources/fish_book.gif" style="width: 200px">
 
 A collection of resources curated by the AIMS stats team.
 
