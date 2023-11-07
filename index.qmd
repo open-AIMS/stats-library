@@ -53,7 +53,7 @@ category_icons <- list(
 )
 
 # Read in bibtex file to df with author's names seperated (first, last, etc)
-bib_raw <- bib2df::bib2df("stats-lib.bib", separate_names = TRUE)
+bib_raw <- bib2df::bib2df("stats_lib.bib", separate_names = TRUE)
 
 # Format bib df
 bib <- bib_raw |> 
@@ -279,5 +279,6 @@ bib %>%
       "<code>Stats Team Library</code>"      
     )), 
     margin = margin(0, 0, 0, 0)
-  )
+  ) %>%
+  add_subtitle("A collection of resources curated by the AIMS stats team.")
 ```
