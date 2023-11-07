@@ -279,6 +279,7 @@ bib %>%
       "<code>Stats Team Library</code>"      
     )), 
     margin = margin(0, 0, 0, 0)
-  ) %>%
-  add_subtitle("A collection of resources curated by the AIMS stats team.")
+  ) 
+  # %>%
+  # add_subtitle("A collection of resources curated by the AIMS stats team.")
 ```
