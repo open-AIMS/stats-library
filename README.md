@@ -1,6 +1,8 @@
 # stats-library
 A collection of resources curated by the AIMS stats team.
 
+[**View the library here!**](https://open-aims.github.io/stats-library/)
+
 
 ## Adding resources
 
@@ -55,3 +57,11 @@ Please don't let this discourage you from adding resources to the library. If yo
   SYNOPSIS = {A go-to guide for the robust reporting of Bayesian analyses.}
 }
 ```
+
+
+
+
+
+## To Do: 
+
+* Add abstract to dropdown if synopsis isn't present
