@@ -22,7 +22,7 @@ knitr::opts_chunk$set(message=FALSE, warning=FALSE, echo=FALSE)
 ```{r setup}
 # We would like to display our resources (papers, books, etc) in a table.
 # The main column will have the resource title (which is hyperlinked to 
-# the pdf file), the authors last names, and the synopsis in a dropdown. 
+# the pdf file), the authors last names, and the notes in a dropdown. 
 # We want everything displayed in this column to be searchable. To do this
 # we need to paste everything to be displayed together as the value for 
 # each cell in the main column, we will then style the column later to 
@@ -58,14 +58,15 @@ bib <- bib_raw |>
   mutate(author_lastnames = paste(author$last_name, collapse = ", ")) |> 
   ungroup() |> 
   # We want everything displayed in the final table to be searchable
-  # So we paste the title, authors' last names, and synopsis together
+  # So we paste the title, authors' last names, and notes together
   # We will only want to use the title from this cell value, but we need
   # everything together to be searchable
   mutate(
     # The full main column cell values (all text to be searchable)
-    resource = paste(title, author_lastnames, synopsis),
+    resource = paste(title, author_lastnames, notes),
     # The text to be removed to regain just the title
-    resource_remove = paste(author_lastnames, synopsis), 
+    resource_remove = paste(author_lastnames, notes),
+    # Remove the }, if it ws mistakenly read in with the url 
     aims_url = aims_url |> str_remove( "\\}$|\\},$")
   ) |>
   select(
@@ -75,11 +76,12 @@ bib <- bib_raw |>
     title,
     author,
     author_lastnames,
-    synopsis,
+    notes,
     category,
     url,
     aims_url,
-    resource_remove
+    resource_remove, 
+    abstract
   )
 
 # A function to create fancy resource uploader/recommender icons
@@ -133,6 +135,14 @@ category_icon <- function(category, size = "2x") {
     shiny::icon(category_icons[[category]], class = paste0("fa-", size))
   }
 }
+
+recode_na <- function(x) {
+  ifelse(
+    x %in% c("nil", "", "NA"), 
+    NA_character_, 
+    x
+  )
+}
 ```
 
 ```{r table}
@@ -158,24 +168,49 @@ bib %>%
       sortable = FALSE
     ),
 
-    # ____ Synopsis in dropdown ____
+    # ____ Abstract and notes in dropdown ____
     details = function(index){
-      synopsis <- bib[index, "synopsis"]
-      synopsis <- ifelse(
-        synopsis %in% c("nil", "", "NA"),
-        NA_character_, 
-        synopsis
-      )
-      # Style for synopsis text
-      synopsis_div <- div(
+      abstract <- bib[index, "abstract"] |> 
+        as.character() |> 
+        recode_na()
+      notes <- bib[index, "notes"] |> 
+        as.character() |> 
+        recode_na()
+      # Style abstract and notes
+      abstract_div <- div(
         style = list(
           float = "left",
-          fontSize = "0.7rem", 
-          margin = "5px 60px 5px 60px"
+          fontSize = "0.8rem", 
+          margin = "5px 10px 5px 50px", 
+          textAlign = "justify",
+          textJustify = "inter-word"
         ), 
-        synopsis
+        tagList(tags$em("Abstract: "), abstract)
       )
-      tagList(synopsis_div)
+      notes_div <- div(
+        style = list(
+          float = "left",
+          fontSize = "0.8rem", 
+          margin = "5px 10px 5px 50px"
+        ), 
+        tagList(tags$em("Notes: "), notes)
+      )
+      if (is.na(abstract) & is.na(notes)) {
+        div(
+          style = list(
+            float = "left", 
+            fontSize = "0.8rem", 
+            margin = "5px 60px 5px 60px"
+          ), 
+          "Abstract and notes not available (complete the `abstract` and `NOTES` field in the respective bibtex entry)"
+        )
+      } else if (is.na(abstract)) {
+        tagList(notes_div)
+      } else if (is.na(notes)) {
+        tagList(abstract_div)
+      } else {
+        tagList(abstract_div, tags$br(), notes_div, tags$br())
+      }
     },
     defaultExpanded = FALSE,
 
@@ -188,20 +223,12 @@ bib %>%
         html = TRUE,
         cell = function(value, index) {
           url <- as.character(bib[index, "url"])
-          title <- bib[index, "title"]
-          # For some reason bib[index, "author_lastnames"] doesn't behave 
-          # as expected. So recreate the last names string here.
+          title <- as.character(bib[index, "title"])
+          # For some reason bib[index, "author_lastnames"] doesn't behave as expected. So recreate the last names string here.
           author_last_names <- bib[index, "author"]$author[[1]]$last_name |> 
             paste(collapse = ", ")
-          # We previously created the resource field by pasting the title, 
-          # author lastnames, and synopsis together. This is so everything
-          # can be searched for. Now we remove the author lastnames and
-          # synopsis to regain just the title (seemingly we need to use 
-          # `value` here or else nothing will be displayed, hence this 
-          # somewhat convuluted work around).
-          resource_remove <- bib[index, "resource_remove"] |>
-            as.character() 
-          resource_show <- value |> str_remove(resource_remove)
+          # We previously created the resource field by pasting the title, author lastnames, and notes together. This is so everything can be searched for (note that abstract is currently excluded). Now we just extract and show the title from the cell value (seemingly we need to use `value` here or else nothing will be displayed, hence this somewhat convoluted work around instead of just using `title` directly).
+          resource_show <- value |> str_extract(title)
           title_linked <- tags$strong(tags$a(
             href = url, 
             target = "_blank",
@@ -211,7 +238,7 @@ bib %>%
           authors_div <- div(
             style = list(
               float = "left", 
-              fontSize = "0.7rem"
+              fontSize = "0.8rem"
             ),
             author_last_names
           )
@@ -255,11 +282,12 @@ bib %>%
       # Dont show any other columns
       title = colDef(show = FALSE),
       author = colDef(show = FALSE),
-      synopsis = colDef(show = FALSE),
+      notes = colDef(show = FALSE),
       author_lastnames = colDef(show = FALSE), 
       resource_remove = colDef(show = FALSE), 
       category = colDef(show = FALSE), 
-      url = colDef(show = FALSE)
+      url = colDef(show = FALSE), 
+      abstract = colDef(show = FALSE)
     )
   ) %>%
   add_title(

@@ -22,11 +22,11 @@ While it is fine (and probably preferrable) to include many bibtex fields, we on
   url =	{<link to resource online>},
   UPLOADER = {<your first name>}, 
   AIMS_URL = {<link to file on AIMS sharepoint>},
-  SYNOPSIS = {<summary/notes/description/remarks about the resource>}
+  NOTES = {<summary/notes/description/remarks about the resource>}
 }
 ```
 
-Note the custom fields in ALL CAPS - these will not be present in an ordinary bibtex entry and you will have to add them yourself. If you can't be bothered writing the synopsis, it would be good to at least have the abstract field present.
+Note the custom fields in ALL CAPS - these will not be present in an ordinary bibtex entry and you will have to add them yourself. If you can't be bothered writing the notes, it would be good to at least have the abstract field present.
 
 ###  **Important!!** File access restriction
 
@@ -67,3 +67,5 @@ Please don't let this discourage you from adding resources to the library. If yo
 ## To Do: 
 
 * Add abstract to dropdown if synopsis isn't present
+
+* Currently the title, authors (last names) and notes are searchable. Should the abstract also be searchable?
