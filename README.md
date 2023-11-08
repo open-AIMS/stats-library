@@ -56,16 +56,31 @@ Please don't let this discourage you from adding resources to the library. If yo
   publisher = {Springer Science and Business Media LLC},
   UPLOADER = {Brendan},
   AIMS_URL = {https://aimsgovau-my.sharepoint.com/notareallink},
-  SYNOPSIS = {A go-to guide for the robust reporting of Bayesian analyses.}
+  NOTES = {A go-to guide for the robust reporting of Bayesian analyses.}
+}
+```
+
+```
+@book{McElreath2020,
+  doi = {10.1201/9780429029608},
+  url = {https://doi.org/10.1201/9780429029608},
+  year = {2020},
+  month = mar,
+  publisher = {Chapman and Hall/{CRC}},
+  author = {Richard McElreath},
+  title = {Statistical Rethinking},
+  abstract = {Statistical Rethinking: A Bayesian Course with Examples in R and Stan builds your knowledge of ...},
+  UPLOADER = {Brendan},
+  AIMS_URL = {},
+  NOTES = {Presents a (somewhat) unified framework for statistical concepts. It is also accompanied by the author's free lecture series (https://github.com/rmcelreath/stat_rethinking_2023) which are awesome.}
 }
 ```
 
 
 
 
-
 ## To Do: 
 
-* Add abstract to dropdown if synopsis isn't present
+* Decide on the structure of notes (e.g. bullets separated by * or &) and implement their display in dropdown
 
 * Currently the title, authors (last names) and notes are searchable. Should the abstract also be searchable?
