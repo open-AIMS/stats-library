@@ -86,7 +86,9 @@ bib <- bib_raw |>
 
 # A function to create fancy resource uploader/recommender icons
 uploader_icon <- function(uploader){
-  uploader <- tolower(uploader)
+  uploader <- uploader |> 
+    as.character() |> 
+    tolower()
   uploader_lookup <- list(
     murray = list(
       icon = "m",
@@ -108,7 +110,7 @@ uploader_icon <- function(uploader){
       icon = "r",
       color = "yellow"
     ), 
-    brendan = c(
+    brendan = list(
       icon = "b", 
       color = "purple"
     )
@@ -124,16 +126,22 @@ uploader_icon <- function(uploader){
   span(icon, bg_circle, class = "fa-stack")
 }
 
-category_icon <- function(category, size = "2x") {
+category_icon <- function(category, color = NULL, size = "2x") {
   category <- category |> 
     tolower() |> 
     str_remove_all("[^A-z ]")
   if (!(category %in% names(category_icons))) {
     warning(paste0("Unknown or missing category: '", category, "'"))
-    shiny::icon("file-circle-question")
+    icon <- shiny::icon("file-circle-question")
   } else {
-    shiny::icon(category_icons[[category]], class = paste0("fa-", size))
+    icon <- shiny::icon(category_icons[[category]], class = paste0("fa-", size))
   }
+  if (!is.null(color)) {
+    icon <- icon |> htmltools::tagAppendAttributes(
+      style = paste0("color: ", color, ";")
+    )
+  }
+  icon
 }
 
 recode_na <- function(x) {
@@ -266,18 +274,20 @@ bib %>%
       ),
       aims_url = colDef(
         name = "",
+        width = 70,
         cell = function(value, index){
-          icon <- bib[index, "category"] |> 
-            as.character() |> 
-            category_icon()
           category <- as.character(bib[index, "category"])
-          link <- tags$a(
-            href = as.character(value), 
-            target = "_blank", 
-            icon
-          )
-        }, 
-        width = 70
+          value <- recode_na(value)
+          if (is.na(value)) {
+            category_icon(category, color = "grey")
+          } else {
+            tags$a(
+              href = as.character(value), 
+              target = "_blank", 
+              category_icon(category)
+            )
+          }
+        }        
       ),
       # Dont show any other columns
       title = colDef(show = FALSE),
