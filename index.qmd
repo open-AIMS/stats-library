@@ -159,7 +159,7 @@ recode_na <- function(x) {
 # Create the table with reactable
 bib %>%
   reactable(
-    ,
+
     # ____ Style table ____
     highlight = TRUE,
     wrap = TRUE,
@@ -312,6 +312,7 @@ bib %>%
       # "<img src='.resources/aims_logo.png' width='70' height='70' style='margin-left: 40px; margin-right: 10px; margin-top: -2px;'>", 
       "<code>Stats Team Library</code>"
     )), 
-    align = "center"
+    align = "center", 
+    margin = margin(b = 20)
   )
 ```
